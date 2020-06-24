@@ -47,3 +47,22 @@ https://wiki.featuremine.com/index.php?title=Getting_Started
 4. `pip install extractor-4.1.7-cp36-cp36m-linux_x86_64.whl yamal-4.1.7-cp36-cp36m-linux_x86_64.whl`
 
 5. `pip install jubilee-4.1.7-cp36-cp36m-linux_x86_64.whl`
+
+
+** Restart
+
+1. no venv
+
+2. pip3 install copra
+
+3. pip3 install websockets
+
+4. pip3 install ipython
+
+5. pip3 install jupyter
+
+6. pip3 install pandas
+
+7. pip3 install matplotblib
+
+8. pip3 install Pillow 
