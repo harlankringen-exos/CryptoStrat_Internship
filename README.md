@@ -65,4 +65,9 @@ https://wiki.featuremine.com/index.php?title=Getting_Started
 
 7. pip3 install matplotblib
 
-8. pip3 install Pillow 
+8. pip3 install Pillow
+
+## Project Organization
+
+Based on this outline:
+https://dev.to/codemouse92/dead-simple-python-project-structure-and-imports-38c6

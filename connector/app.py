@@ -1,7 +1,10 @@
+
 import asyncio
 from datetime import datetime
 import sys
-from copra.websocket import Channel, Client
+
+from connector.infrastructure.client import Client
+from connector.infrastructure.channel import Channel
 
 class Tick:
     def __init__(self, tick_dict):
@@ -31,12 +34,13 @@ class Ticker(Client):
             tick = Tick(message)
             print(tick, "\n\n")
 
-product_id = sys.argv[1]
-loop = asyncio.get_event_loop()
-channel = Channel('ticker', product_id)
-ticker = Ticker(loop, channel)
-try:
-    loop.run_forever()
-except KeyboardInterrupt:
-    loop.run_until_complete(ticker.close())
-    loop.close()
+def run():
+    product_id = sys.argv[1]
+    loop = asyncio.get_event_loop()
+    channel = Client(['ticker', "heartbeat"], product_id)
+    ticker = Ticker(loop, channel)
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.run_until_complete(ticker.close())
+        loop.close()
