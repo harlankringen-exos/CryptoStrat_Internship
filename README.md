@@ -1,61 +1,13 @@
 # CryptoStrat_Internship
 
-## Install Log
+## Preliminary
+Get all the packages and such out of the way.  
 
-### Preliminary
+1. we have abandoned the idea of a virtual environment
 
-1. We're using python3 in a virtualenv
+2. pip3 install copra # open source library mentioned in coinbase docs
 
-2. We're using anaconda (sequestered in a virtual env); Anaconda is installed
-locally on my machine but we ignore this in commits, deferring portable
-packaging/dockerizing until later.
-
-### Initial Setup (venv)
-
-1. `apt-get install python3-venv`
-
-2. `python3 -m venv .venv`
-
-3. to enter and leave respectively:
-
-`source .venv/bin/activate`
-
-`deactivate`
-
-### Anaconda
-https://docs.anaconda.com/anaconda/install/linux/
-
-1. `apt-get install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1
-libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6`
-
-### FeatureMine
-[ ] todo
-https://wiki.featuremine.com/index.php?title=Getting_Started
-
-1. `apt-get install -y zlib1g-dev libdw-dev libunwind-dev`
-
-2. `pip install pytz msgpack kafka-python`
-
-3. ```curl http://mirror.cedia.org.ec/nongnu/numdiff/numdiff-5.9.0.tar.gz -o numdiff-5.9.0.tar.gz
-    tar -xvzf numdiff-5.9.0.tar.gz
-    cd numdiff-5.9.0
-    ./configure
-    make
-    make install
-    ```
-
-4. `pip install extractor-4.1.7-cp36-cp36m-linux_x86_64.whl yamal-4.1.7-cp36-cp36m-linux_x86_64.whl`
-
-5. `pip install jubilee-4.1.7-cp36-cp36m-linux_x86_64.whl`
-
-
-** Restart
-
-1. no venv
-
-2. pip3 install copra
-
-3. pip3 install websockets
+3. pip3 install websockets # widely used implementation of websockets protocol
 
 4. pip3 install ipython
 
@@ -69,5 +21,33 @@ https://wiki.featuremine.com/index.php?title=Getting_Started
 
 ## Project Organization
 
-Based on this outline:
+In pursuit of python best practices, we follow a project structure based on this
+outline:
+
 https://dev.to/codemouse92/dead-simple-python-project-structure-and-imports-38c6
+
+The "app" is called `connector` and code lives in the various subdirectories of
+`connector/`.  The `infrastructure` dir is used to hold copies of an open source
+library which were useful in getting up to speed on websockets.  The `socks` dir
+holds a minimal implementation of an approach just using asncio and websockets.
+The `requests` dir is just a holding ground for json requests to be sent to the
+exchange.
+
+## How to run
+
+At the project root, where `connector/` and `README.md` are sitting, run the
+following at a shell:
+
+`python3 -m connector`
+
+This looks for `__main__.py` which currently calls the `tester.py` code in `socks/`.
+
+## Notes about Portabiilty and Python Versions
+
+The state of python is a little strange, with multiple versions (even in the 3.x
+range), including the fact that the installer can be different, `pip` v. `pip3`.
+With a full application ready to be run, this can be solved with a container
+solution, e.g. docker.
+
+I don't have that set up yet, so you might need to manually fix python
+version/dependency problems.
