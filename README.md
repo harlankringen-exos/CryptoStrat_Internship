@@ -38,7 +38,10 @@ exchange.
 At the project root, where `connector/` and `README.md` are sitting, run the
 following at a shell:
 
-`python3 -m connector`
+`python3 -m connector "matches.json" "outfile.txt"`
+
+The first argument refers to a json file in the `requests/` directory while the
+second is just the name of the desired outfile.
 
 This looks for `__main__.py` which currently calls the `tester.py` code in `socks/`.
 
