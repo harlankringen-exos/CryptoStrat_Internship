@@ -19,6 +19,8 @@ Get all the packages and such out of the way.
 
 8. pip3 install Pillow
 
+9. pip3 install pyinstrument
+
 ## Project Organization
 
 In pursuit of python best practices, we follow a project structure based on this
@@ -44,6 +46,15 @@ The first argument refers to a json file in the `requests/` directory while the
 second is just the name of the desired outfile.
 
 This looks for `__main__.py` which currently calls the `tester.py` code in `socks/`.
+
+## Profiling This article talks about syncing up with C and the `rdtsc` assembly
+instruction
+https://hacks.mozilla.org/2020/05/building-functiontrace-a-graphical-python-profiler/
+although we haven't played around with it.
+
+`python3 -m cProfile connector/app.py "level2.json"`
+
+`python3 -m pyinstrument connector/app.py "level2.json"`
 
 ## Notes about Portabiilty and Python Versions
 

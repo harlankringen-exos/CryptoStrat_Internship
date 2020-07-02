@@ -2,28 +2,35 @@
 # open a connection to the feed and stream to stdout
 
 import asyncio
+# import pdb
 import json
 from multiprocessing import Process, Queue
 import sys
 import websockets
 
+from .clk import Timer, TimerError
+
 FEED_URL = 'wss://ws-feed.pro.coinbase.com:443'
 SANDBOX_FEED_URL = 'wss://ws-feed-public.sandbox.pro.coinbase.com:443'
 REQUEST = "connector/requests"
 
-MAX_SIZE = 10000 # size of message queue before writing out
+MAX_SIZE = 100 # size of message queue before writing out
 
+@Timer()
 async def req(q, req_file):
+    ctr = 0
     async with websockets.connect(SANDBOX_FEED_URL) as websocket:
         with open(REQUEST + '/' + req_file) as f:
             text = json.load(f)
             msg = json.dumps(text)
 
             await websocket.send(msg)
-            
+
+            # pdb.set_trace()
+                            
             while True:
-                # if q.qsize() % 10 == 0:
-                #     print(q.qsize())
+                if q.qsize() % 10 == 0:
+                    print(q.qsize())
                 resp = await websocket.recv()
                 q.put(resp)
                 
@@ -56,8 +63,7 @@ def run():
     try:
         loop.run_until_complete(req(q, rf))
     finally:
-        # should have another run_until_complete/.stop() to end the stream more
-        # gracefully
+        # should have another run_until_complete/.stop() to end gracefully
         arg_dict['out_file'].close()
         p.join()
         loop.close()
