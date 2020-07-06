@@ -33,7 +33,20 @@ class MyServerProtocol(WebSocketServerProtocol):
 
     def onOpen(self):
         print("Websock connection open")
-      
+
+        # # stream messages
+        # read data dump file into memory
+        outf = open("/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/data_dumps/all.out", "r")
+        all = outf.readlines()
+
+        # binary encode, msg pack whatever
+        for update in all:
+            msg = json.dumps(json.loads(update)).encode('utf-8')
+
+            # send off
+            self.sendMessage(msg, True)
+        
+        
 if __name__ == "__main__":
     factory = WebSocketServerFactory("ws://127.0.0.1:9000")
     factory.protocol = MyServerProtocol

@@ -21,6 +21,8 @@ Get all the packages and such out of the way.
 
 9. pip3 install pyinstrument
 
+10. pip3 install msgpack
+
 ## Project Organization
 
 In pursuit of python best practices, we follow a project structure based on this
