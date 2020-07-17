@@ -7,6 +7,7 @@ import json
 import logging
 import time
 from urllib.parse import urlparse
+import random
 
 from autobahn.asyncio.websocket import WebSocketServerFactory
 from autobahn.asyncio.websocket import WebSocketServerProtocol
@@ -36,16 +37,28 @@ class MyServerProtocol(WebSocketServerProtocol):
 
         # # stream messages
         # read data dump file into memory
-        outf = open("/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/data_dumps/all.out", "r")
-        all = outf.readlines()
+        match = {"type":"match","trade_id":14587419,"maker_order_id":"91b59a7c-6a07-4039-9536-21daf3cb3282","taker_order_id":"47888661-47cc-4af6-a26e-ea359b236b1b","side":"buy","size":"0.0659","price":"9120.8","product_id":"BTC-USD","sequence":180754935,"time":"2020-06-30T19:10:24.602001Z"}
 
-        # binary encode, msg pack whatever
-        for update in all:
-            msg = json.dumps(json.loads(update)).encode('utf-8')
+        update = {"type":"l2update","product_id":"BTC-USD","changes":[["buy","9079.24","0.06920000"]],"time":"2020-06-30T19:10:25.546819Z"}
 
-            # send off
-            self.sendMessage(msg, True)
+        for _ in range(10000):
+            choice = random.randint(0,1)
+            if choice == 0:
+                msg = json.dumps(match).encode('utf-8')
+            else:
+                msg = json.dumps(update).encode('utf-8')
+
+            self.send(msg,True)
         
+        # outf = open("/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/data_dumps/all.out", "r")
+        # all = outf.readlines()        
+        # # binary encode, msg pack whatever
+        # for update in all:
+        #     msg = json.dumps(json.loads(update)).encode('utf-8')
+
+        #     # send off
+        #     self.sendMessage(msg, True)
+        # print("done")
         
 if __name__ == "__main__":
     factory = WebSocketServerFactory("ws://127.0.0.1:9000")

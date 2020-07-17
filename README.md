@@ -23,6 +23,14 @@ Get all the packages and such out of the way.
 
 10. pip3 install msgpack
 
+11. pip3 install pycallgraph
+
+12. pip3 install pyprof2calltree
+
+13. sudo apt install kcachegrind
+
+14. sudo apt install linux-tools-common linux-tools-4.15.0-106-generic linux-tools-generic
+
 ## Project Organization
 
 In pursuit of python best practices, we follow a project structure based on this

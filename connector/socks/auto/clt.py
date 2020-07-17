@@ -1,7 +1,6 @@
 
 import asyncio
 import json
-from multiprocessing import Queue
 import time
 
 from autobahn.asyncio.websocket import WebSocketClientProtocol, \
@@ -12,21 +11,18 @@ import msgpack as ms
 class MyClientProtocol(WebSocketClientProtocol):
 
     async def onOpen(self):
-        print("WebSocket connection open.")
-
-        # name = input("What's your name? ")
-        # self.sendMessage(f"> {name}".encode("utf-8"))
-        await asyncio.sleep(1)
+        #print("WebSocket connection open.")
+        #await asyncio.sleep(1)
+        pass
         
     def onMessage(self, payload, isBinary):
+        recv = time.time_ns()
         if isBinary:
-            print("Binary message received: {0} bytes".format(len(payload)))
+            #print("Binary message received: {0} bytes".format(len(payload)))
             msg = json.loads(payload.decode('utf8'))
-            print(msg)
-            recv = time.time_ns()
+            #print(msg)
 
             # ore-ify, first pass, no real optimization or cleverness
-            q = Queue()
             with open('msgpack.out', 'wb') as self.outf:
                 version = ms.pack([1,0,0], self.outf)
                 header = ms.pack([{'symbol': 'BTC-USD', 'price_tick': 0.01, 'qty_tick': 1}], self.outf)
@@ -37,10 +33,12 @@ class MyClientProtocol(WebSocketClientProtocol):
                     pass
             
         else:
-            print("Text message received: {0}".format(payload.decode('utf8')))
+            #print("Text message received: {0}".format(payload.decode('utf8')))
+            pass
 
     def onClose(self, wasClean, code, reason):
-        print("WebSocket connection closed: {0}".format(reason))
+        #print("WebSocket connection closed: {0}".format(reason))
+        pass
 
 
 if __name__ == '__main__':
