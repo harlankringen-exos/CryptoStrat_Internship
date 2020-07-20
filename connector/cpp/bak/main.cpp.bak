@@ -1,0 +1,146 @@
+//
+// Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+// Official repository: https://github.com/vinniefalco/CppCon2018
+//
+
+//------------------------------------------------------------------------------
+/*
+    WebSocket chat server
+
+    This implements a multi-user chat room using WebSocket.
+*/
+//------------------------------------------------------------------------------
+
+#include "root_certificates.hpp"
+
+#include <array>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/error.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/ssl.hpp>
+#include <boost/beast/version.hpp>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include "listener.hpp"
+#include "shared_state.hpp"
+
+#include "nlohmann/json.hpp"
+
+// for convenience
+using json = nlohmann::json;
+
+// // organize better later
+// The io_context is required for all I/O
+boost::asio::io_context ioc;
+boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_client};
+
+// necessary io objects
+boost::asio::ip::tcp::resolver resolver(ioc);
+boost::beast::ssl_stream<boost::beast::tcp_stream> stream(ioc, ctx);
+
+boost::asio::ip::tcp::socket tcp_socket{ioc};
+std::array<char, 4096> bytes;
+
+void read_handler(const boost::system::error_code &ec,
+                  std::size_t bytes_transferred) {
+  if (!ec) {
+    std::cout.write(bytes.data(), bytes_transferred);
+    tcp_socket.async_read_some(boost::asio::buffer(bytes), read_handler);
+  }
+}
+
+void connect_handler(const boost::system::error_code &ec) {
+  if (!ec) {
+    // {"channels":["level2","heartbeat",{"name":"ticker","product_ids":["ETH-BTC","ETH-USD"]}],"product_ids":["ETH-USD","ETH-EUR"],"type":"subscribe"}
+    json j2 = {
+        {"type", "subscribe"},
+        {"product_ids", {"ETH-USD", "ETH-EUR"}},
+        {"channels",
+         {"level2",
+          "heartbeat",
+          {{"name", "ticker"}, {"product_ids", {"ETH-BTC", "ETH-USD"}}}}}};
+
+    std::string s = j2.dump();
+    write(tcp_socket, boost::asio::buffer(s));
+    tcp_socket.async_read_some(boost::asio::buffer(bytes), read_handler);
+  }
+}
+
+void resolve_handler(const boost::system::error_code &ec,
+                     boost::asio::ip::tcp::resolver::iterator it) {
+  if (!ec) {
+    tcp_socket.async_connect(*it, connect_handler);
+  }
+}
+
+int main(int argc, char *argv[]) {
+  // Check command line arguments.
+  if (argc != 4) {
+    std::cerr << "Usage: websocket-chat-server <address> <port> <doc_root>\n"
+              << "Example:\n"
+              << "    websocket-chat-server 0.0.0.0 8080 .\n";
+    return EXIT_FAILURE;
+  }
+
+  // difference?
+  // boost::beast::ssl_stream<boost::beast::tcp_stream> stream(ioc, ctx);
+  // websocket::stream<beast::ssl_stream<boost::asio::ip::tcp::socket>> ws{ioc,
+  //                                                                       ctx};
+
+  load_root_certificates(ctx);
+  ctx.set_verify_mode(ssl::verify_peer);
+
+  // Set SNI Hostname (many hosts need this to handshake successfully)
+  if (!SSL_set_tlsext_host_name(stream.native_handle(),
+                                "ws-feed.pro.coinbase.com")) {
+    boost::beast::error_code ec{static_cast<int>(::ERR_get_error()),
+                                boost::asio::error::get_ssl_category()};
+    throw boost::beast::system_error{ec};
+  }
+
+  // Look up the domain name to get an ip address:
+  // 0 104.18.15.237:443
+  // 1 104.18.14.237:443
+  // 2 [2606:4700::6812:fed]:443
+  // 3 [2606:4700::6812:eed]:443
+  // auto const results = resolver.resolve("ws-feed.pro.coinbase.com", "443");
+  // // works
+  // auto address = results.begin()->endpoint().address();
+  // auto port = static_cast<unsigned short>(std::atoi("443"));
+  // auto doc_root = argv[3];
+
+  boost::asio::ip::tcp::resolver::query q{"ws-feed.pro.coinbase.com", "443"};
+  resolver.async_resolve(q, resolve_handler);
+  ioc.run();
+
+  // // Create and launch a listening port
+  // std::make_shared<listener>(ioc, tcp::endpoint{address, port},
+  //                            std::make_shared<shared_state>(doc_root))
+  //     ->run();
+
+  // // Capture SIGINT and SIGTERM to perform a clean shutdown
+  // boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
+  // signals.async_wait([&ioc](boost::system::error_code const &, int) {
+  //   // Stop the io_context. This will cause run()
+  //   // to return immediately, eventually destroying the
+  //   // io_context and any remaining handlers in it.
+  //   ioc.stop();
+  // });
+
+  // Run the I/O service on the main thread
+  ioc.run();
+
+  // (If we get here, it means we got a SIGINT or SIGTERM)
+
+  return EXIT_SUCCESS;
+}
