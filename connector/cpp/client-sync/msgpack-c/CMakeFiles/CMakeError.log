@@ -1,0 +1,84 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_929bd/fast"
+/usr/bin/make -f CMakeFiles/cmTC_929bd.dir/build.make CMakeFiles/cmTC_929bd.dir/build
+make[1]: Entering directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_929bd.dir/CheckSymbolExists.cxx.o
+/usr/bin/c++    -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98     -o CMakeFiles/cmTC_929bd.dir/CheckSymbolExists.cxx.o -c /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx
+Linking CXX executable cmTC_929bd
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_929bd.dir/link.txt --verbose=1
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98      -rdynamic CMakeFiles/cmTC_929bd.dir/CheckSymbolExists.cxx.o  -o cmTC_929bd 
+CMakeFiles/cmTC_929bd.dir/CheckSymbolExists.cxx.o: In function `main':
+CheckSymbolExists.cxx:(.text+0x1b): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_929bd.dir/build.make:97: recipe for target 'cmTC_929bd' failed
+make[1]: *** [cmTC_929bd] Error 1
+make[1]: Leaving directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_929bd/fast' failed
+make: *** [cmTC_929bd/fast] Error 2
+
+File /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp/CheckSymbolExists.cxx:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_f31ba/fast"
+/usr/bin/make -f CMakeFiles/cmTC_f31ba.dir/build.make CMakeFiles/cmTC_f31ba.dir/build
+make[1]: Entering directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_f31ba.dir/CheckFunctionExists.cxx.o
+/usr/bin/c++    -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98  -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_f31ba.dir/CheckFunctionExists.cxx.o -c /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CheckLibraryExists/CheckFunctionExists.cxx
+Linking CXX executable cmTC_f31ba
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f31ba.dir/link.txt --verbose=1
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_f31ba.dir/CheckFunctionExists.cxx.o  -o cmTC_f31ba -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_f31ba.dir/build.make:97: recipe for target 'cmTC_f31ba' failed
+make[1]: *** [cmTC_f31ba] Error 1
+make[1]: Leaving directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_f31ba/fast' failed
+make: *** [cmTC_f31ba/fast] Error 2
+
+
+Performing C++ SOURCE FILE Test MSGPACK_ENABLE_GCC_CXX_ATOMIC failed with the following output:
+Change Dir: /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_980c2/fast"
+/usr/bin/make -f CMakeFiles/cmTC_980c2.dir/build.make CMakeFiles/cmTC_980c2.dir/build
+make[1]: Entering directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_980c2.dir/src.cxx.o
+/usr/bin/c++    -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98  -DMSGPACK_ENABLE_GCC_CXX_ATOMIC   -o CMakeFiles/cmTC_980c2.dir/src.cxx.o -c /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp/src.cxx
+/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp/src.cxx:2:10: fatal error: bits/atomicity.h: No such file or directory
+ #include <bits/atomicity.h>
+          ^~~~~~~~~~~~~~~~~~
+compilation terminated.
+CMakeFiles/cmTC_980c2.dir/build.make:65: recipe for target 'CMakeFiles/cmTC_980c2.dir/src.cxx.o' failed
+make[1]: *** [CMakeFiles/cmTC_980c2.dir/src.cxx.o] Error 1
+make[1]: Leaving directory '/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/src/msgpack-c/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_980c2/fast' failed
+make: *** [cmTC_980c2/fast] Error 2
+
+Source file was:
+
+#include <bits/atomicity.h>
+int atomic_sub(int i) { return __gnu_cxx::__exchange_and_add(&i, -1) - 1; }
+int atomic_add(int i) { return __gnu_cxx::__exchange_and_add(&i, 1) + 1; }
+int main(int argc, char * argv[])
+{
+    atomic_sub(1);
+    atomic_add(1);
+}
+

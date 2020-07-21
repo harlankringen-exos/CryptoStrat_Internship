@@ -1,0 +1,1 @@
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98   -rdynamic CMakeFiles/speed_test_nested_array.dir/speed_test_nested_array.cpp.o  -o speed_test_nested_array -lboost_timer -lboost_chrono -lboost_system -lrt 

@@ -1,0 +1,1 @@
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98   -rdynamic CMakeFiles/msgpack_variant_mapbased.dir/msgpack_variant_mapbased.cpp.o  -o msgpack_variant_mapbased -lboost_system -lpthread -lz 

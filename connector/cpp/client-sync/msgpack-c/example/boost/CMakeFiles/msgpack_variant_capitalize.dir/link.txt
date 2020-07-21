@@ -1,0 +1,1 @@
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98   -rdynamic CMakeFiles/msgpack_variant_capitalize.dir/msgpack_variant_capitalize.cpp.o  -o msgpack_variant_capitalize -lboost_system -lpthread -lz 

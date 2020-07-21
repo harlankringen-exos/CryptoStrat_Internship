@@ -1,0 +1,1 @@
+/usr/bin/c++  -DMSGPACK_DEFAULT_API_VERSION=3 -std=c++98   -rdynamic CMakeFiles/speed_test.dir/speed_test.cpp.o  -o speed_test -lboost_timer -lboost_chrono -lboost_system -lrt 
