@@ -38,4 +38,9 @@ connection.
 
 They should all be compactifid into a single directory.  
 
+## SSL
 
+The client-(a)sync and server examples are meant to be run together, as opposed
+to running the coinbase client against the server.  This is because the server
+doesn't do as much SSL business, I think.  Should be an easy fix, but for not
+the three clients must unfortunately all be kept in sync.

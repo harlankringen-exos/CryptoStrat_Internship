@@ -42,6 +42,9 @@ link_directories(${OPENSSL_LIBRARY_DIRS})
 message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
 
 
+find_package(ZLIB)
+
+
 # needed the boost_root hint
 set(BOOST_ROOT /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/include/boost_1_73_0)
 find_package(Boost REQUIRED COMPONENTS system)
@@ -57,10 +60,10 @@ source_group(TREE ${Boost_INCLUDE_DIRS}/boost/beast PREFIX beast FILES ${BEAST_F
 # # we use a third party (non boost) json library; it's a single header file we stick in the project tree itself...
 # # similar to root_certificates.hpp
 file(GLOB APP_FILES
-  beast.hpp
+  helpers.hppa
   nlohmann/json.hpp
+  root_certificates.hpp
   ore.hpp
-  http_session.cpp
   main.cpp
   net.hpp)
 
@@ -70,7 +73,7 @@ add_executable(websocket-msg-client-async ${APP_FILES} ${BEAST_FILES})
 
 if(NOT WIN32)
   find_package(Threads)
-  target_link_libraries(websocket-msg-client-async PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY} OpenSSL::SSL OpenSSL::Crypto)
+  target_link_libraries(websocket-msg-client-async PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB dl)
   target_include_directories(websocket-msg-client-async PRIVATE msgpack-c/include)
 endif()
 

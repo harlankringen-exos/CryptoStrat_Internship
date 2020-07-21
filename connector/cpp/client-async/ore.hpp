@@ -4,9 +4,8 @@
 
 class LevelSet {
  public:
-  LevelSet(int idx, uint64_t receive, int vendor_offset, int vendor_seqno,
-           int batch, int imnt_id, std::string price, std::string qty,
-           bool is_bid)
+  LevelSet(int idx, uint64_t receive, int64_t vendor_offset, int vendor_seqno,
+           int batch, int imnt_id, int price, int qty, bool is_bid)
       : idx_(idx),
         receive_(receive),
         vendor_offset_(vendor_offset),
@@ -23,20 +22,19 @@ class LevelSet {
  private:
   int idx_;
   uint64_t receive_;
-  int vendor_offset_;
+  int64_t vendor_offset_;
   int vendor_seqno_;
   int batch_;
   int imnt_id_;
-  std::string price_;
-  std::string qty_;
+  int price_;
+  int qty_;
   bool is_bid_;
 };
 
 class Match {
  public:
-  Match(int idx, uint64_t receive, int vendor_offset, int vendor_seqno,
-        int batch, int imnt_id, std::string trade_price, std::string qty,
-        std::string decorator)
+  Match(int idx, uint64_t receive, int64_t vendor_offset, int vendor_seqno,
+        int batch, int imnt_id, int trade_price, int qty, std::string decorator)
       : idx_(idx),
         receive_(receive),
         vendor_offset_(vendor_offset),
@@ -53,11 +51,20 @@ class Match {
  private:
   int idx_;
   uint64_t receive_;
-  int vendor_offset_;
+  int64_t vendor_offset_;
   int vendor_seqno_;
   int batch_;
   int imnt_id_;
-  std::string trade_price_;
-  std::string qty_;
+  int trade_price_;
+  int qty_;
   std::string decorator_;
+};
+
+class Time {
+ public:
+  Time(int idx, uint64_t receive) : idx_(idx), receive_(receive) {}
+  MSGPACK_DEFINE(idx_, receive_)
+ private:
+  int idx_;
+  uint64_t receive_;
 };
