@@ -68,3 +68,12 @@ class Time {
   int idx_;
   uint64_t receive_;
 };
+
+class OrderAdd {
+ public:
+  Time(int idx, uint64_t receive) : idx_(idx), receive_(receive) {}
+  MSGPACK_DEFINE(idx_, receive_)
+ private:
+  int idx_;
+  uint64_t receive_;
+};

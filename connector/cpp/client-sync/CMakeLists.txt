@@ -59,8 +59,9 @@ source_group(TREE ${Boost_INCLUDE_DIRS}/boost/beast PREFIX beast FILES ${BEAST_F
 # # we use a third party (non boost) json library; it's a single header file we stick in the project tree itself...
 # # similar to root_certificates.hpp
 file(GLOB APP_FILES
-  beast.hpp
   nlohmann/json.hpp
+  helpers.hpp
+  root_certificates.hpp
   ore.hpp
   main.cpp
   net.hpp)

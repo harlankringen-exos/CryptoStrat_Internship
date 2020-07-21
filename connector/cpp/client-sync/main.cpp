@@ -13,20 +13,20 @@
 //
 //------------------------------------------------------------------------------
 
-//[example_websocket_client
-
-// #include <boost/asio/connect.hpp>
-// #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
+
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <string>
 
-#include "epoch_converter.hpp"
+#include "helpers.hpp"
 #include "nlohmann/json.hpp"
 #include "ore.hpp"
 #include "root_certificates.hpp"
@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
         "\"channels\": [\"level2\", \"matches\"]}";  // argv[3];
     // auto start = std::chrono::high_resolution_clock::now();
     uint64_t seconds_to_epoch = 0;
+    uint64_t sec_to_ns = 1000000000;
     int price_digits = 2;
     int qty_digits = 8;
 
@@ -84,9 +85,6 @@ int main(int argc, char** argv) {
 
     // Make the connection on the IP address we get from a lookup
     auto ep = beast::get_lowest_layer(ws).connect(results);
-    // // Turn off the timeout on the tcp_stream, because
-    // // the websocket stream has its own timeout system.
-    // beast::get_lowest_layer(ws).expires_never();
 
     ws.next_layer().handshake(ssl::stream_base::client);
 
@@ -94,10 +92,6 @@ int main(int argc, char** argv) {
     // Host HTTP header during the WebSocket handshake.
     // See https://tools.ietf.org/html/rfc7230#section-5.4
     host += ':' + std::to_string(ep.port());
-
-    // // Set suggested timeout settings for the websocket
-    // ws.set_option(
-    //     websocket::stream_base::timeout::suggested(beast::role_type::client));
 
     // Set a decorator to change the User-Agent of the handshake
     ws.set_option(
@@ -117,23 +111,50 @@ int main(int argc, char** argv) {
     beast::flat_buffer buffer;
 
     // Read a message into our buffer
-    // tic
     for (int i = 0; i != 10000; ++i) {
       ws.read(buffer);
-      uint64_t now =
+
+      uint64_t exos_time =
           std::chrono::duration_cast<std::chrono::nanoseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
               .count();
+      uint64_t elapsedEpoch = exos_time / sec_to_ns;
+      int64_t t_ns = exos_time % sec_to_ns;
 
       json j = json::parse(beast::buffers_to_string(buffer.data()));
       std::string type = j["type"];
 
-      try {
-        // possible Time message plus some other bookkeeping
+      if (type == "snapshot") {
+        std::cout << "snap shotn";
+        // vendor_offset is 0
+        // an l2 message for every bid/ask
+        auto bids = j["bids"];
+        auto asks = j["asks"];
+        int bid_switch = bids.size();
+        bids.insert(bids.end(), asks.begin(), asks.end());
+
+        for (auto bids_iter = bids.begin(); bids_iter != bids.end();
+             ++bids_iter) {
+          int price_field = str_to_intfield((*bids_iter)[0], price_digits);
+          int qty_field = str_to_intfield((*bids_iter)[1], qty_digits);
+
+          auto idx = std::distance(bids.begin(), bids_iter);
+
+          LevelSet ore_msg(1, t_ns, 0, 0, 0, 0, price_field, qty_field,
+                           idx < bid_switch ? "buy" : "sell");
+          std::array<LevelSet, 1> arr = {ore_msg};
+          msgpack::sbuffer sbuf;
+          msgpack::pack(sbuf, arr);
+
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
+        }
+      } else if (j["type"] != "subscriptions") {
+        std::cout << j["type"] << std::endl;
         std::string ts = j["time"];
-        uint64_t elapsedEpoch = EpochConverter(ts);
-        int t_ns = read6(ts, 20) * 1000;
-        int64_t vendor_offset = now - (elapsedEpoch + t_ns);
+        uint64_t vendor_time = EpochConverter(ts);
+        int64_t vendor_offset = vendor_time - exos_time;
 
         if (elapsedEpoch > seconds_to_epoch) {
           seconds_to_epoch = elapsedEpoch;
@@ -145,44 +166,39 @@ int main(int argc, char** argv) {
           msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
           msgpack::object deserialized = oh.get();
           std::cout << deserialized << std::endl;
-
-          // main message packs
-          if (type == "l2update") {
-            int price_field = str_to_intfield(j["changes"][0][1], price_digits);
-            int qty_field = str_to_intfield(j["changes"][0][2], qty_digits);
-            LevelSet ore_msg(14, t_ns, vendor_offset, 0, 0, 0, price_field,
-                             qty_field, j["changes"][0][0] == "buy");
-            std::array<LevelSet, 1> arr = {ore_msg};
-            msgpack::sbuffer sbuf;
-            msgpack::pack(sbuf, arr);
-
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
-
-          if (type == "match") {
-            auto price_field = str_to_intfield(j["price"], price_digits);
-            auto qty_field = str_to_intfield(j["size"], qty_digits);
-            Match ore_msg(11, t_ns, vendor_offset, 0, 0, 0, price_field,
-                          qty_field, j["side"] == "buy" ? "b" : "s");
-            std::array<Match, 1> arr = {ore_msg};
-            msgpack::sbuffer sbuf;
-            msgpack::pack(sbuf, arr);
-
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
         }
-        // still need snapshot?
-      } catch (...) {
-        std::cout << "an error caught!" << std::endl;
+
+        if (type == "l2update") {
+          int price_field = str_to_intfield(j["changes"][0][1], price_digits);
+          int qty_field = str_to_intfield(j["changes"][0][2], qty_digits);
+          LevelSet ore_msg(14, t_ns, vendor_offset, 0, 0, 0, price_field,
+                           qty_field, j["changes"][0][0] == "buy");
+          std::array<LevelSet, 1> arr = {ore_msg};
+          msgpack::sbuffer sbuf;
+          msgpack::pack(sbuf, arr);
+
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
+        }
+
+        else if (type == "match") {
+          auto price_field = str_to_intfield(j["price"], price_digits);
+          auto qty_field = str_to_intfield(j["size"], qty_digits);
+          Match ore_msg(11, t_ns, vendor_offset, 0, 0, 0, price_field,
+                        qty_field, j["side"] == "buy" ? "b" : "s");
+          std::array<Match, 1> arr = {ore_msg};
+          msgpack::sbuffer sbuf;
+          msgpack::pack(sbuf, arr);
+
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
+        }
       }
 
       // drain buffer
+      std::cout << "draining\n";
       buffer.consume(buffer.size());
     }
 
@@ -208,5 +224,3 @@ int main(int argc, char** argv) {
   }
   return EXIT_SUCCESS;
 }
-
-//]

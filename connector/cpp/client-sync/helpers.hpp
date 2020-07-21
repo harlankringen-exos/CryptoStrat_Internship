@@ -66,10 +66,9 @@ long long EpochConverter(std::string const& str) {
   auto h = read2(str, 11);
   auto M = read2(str, 14);
   auto s = read2(str, 17);
-  // auto us = read6(str, 20);
-  // return days_from_civil(y, m, d) * 86400LL + h * 3600 + M * 60 + s;
+  auto us = read6(str, 20);
   return days_from_civil(y, m, d) * day_ns + h * hour_ns + M * min_ns +
-         s * sec_ns;  // + us * 1000.;
+         s * sec_ns + us * 1000;
 }
 
 // this can't be right
