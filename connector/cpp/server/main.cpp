@@ -127,8 +127,8 @@ void do_session(tcp::socket& socket) {
         bool alternating = true;
 
         ws.write(net::buffer(subs));
-        // ws.write(net::buffer(snapshot));
-        for (int i = 0; i != 9998; ++i) {
+        ws.write(net::buffer(snapshot));
+        for (int i = 0; i != 10000; ++i) {
           std::cout << i << std::endl;
           if (alternating) {
             ws.write(net::buffer(match));

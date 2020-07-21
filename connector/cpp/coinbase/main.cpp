@@ -9,25 +9,28 @@
 
 //------------------------------------------------------------------------------
 //
-// meant to connect to cpp/server example
-// lacks a lot of ssl junk
+// connect to coinbase and liten for l2 and match updates
+// msgpack the around 4 different ORE messages
 //
 //------------------------------------------------------------------------------
 
-//[example_websocket_client
-
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 #include "helpers.hpp"
 #include "nlohmann/json.hpp"
 #include "ore.hpp"
+#include "root_certificates.hpp"
 
 // for convenience
 using json = nlohmann::json;
@@ -36,15 +39,15 @@ namespace beast = boost::beast;          // from <boost/beast.hpp>
 namespace http = beast::http;            // from <boost/beast/http.hpp>
 namespace websocket = beast::websocket;  // from <boost/beast/websocket.hpp>
 namespace net = boost::asio;             // from <boost/asio.hpp>
+namespace ssl = boost::asio::ssl;        // from <boost/asio/ssl.hpp>
 using tcp = boost::asio::ip::tcp;        // from <boost/asio/ip/tcp.hpp>
 
+// Sends a WebSocket message and prints the response
 int main(int argc, char** argv) {
   try {
     // Check command line arguments.
-    // verbose is a bool that prints desserialized messages to stdout if set
-    // set at command line as "true" or "1"
     if (argc != 4) {
-      std::cerr << "Usage: websocket-client-sync <host> <port> <verbose?>\n"
+      std::cerr << "Usage: websocket-client-sync <host> <port> <text>\n"
                 << "Example:\n"
                 << "    websocket-client-sync echo.websocket.org 80 \"Hello, "
                    "world!\"\n";
@@ -52,12 +55,9 @@ int main(int argc, char** argv) {
     }
     std::string host = argv[1];
     auto const port = argv[2];
-    auto const verbose =
-        (std::string(argv[3]) == "true" || std::string(argv[3]) == "1") ? true
-                                                                        : false;
     auto const text =
         "{\"type\": \"subscribe\", \"product_ids\": [\"BTC-USD\"], "
-        "\"channels\": [\"level2\", \"matches\"]}";
+        "\"channels\": [\"level2\", \"matches\"]}";  // argv[3];
     // auto start = std::chrono::high_resolution_clock::now();
     uint64_t seconds_to_epoch = 0;
     uint64_t sec_to_ns = 1000000000;
@@ -66,16 +66,28 @@ int main(int argc, char** argv) {
 
     // The io_context is required for all I/O
     net::io_context ioc;
+    ssl::context ctx{ssl::context::tlsv12_client};
+    load_root_certificates(ctx);
+    ctx.set_verify_mode(ssl::verify_none);
 
     // These objects perform our I/O
-    tcp::resolver resolver{ioc};
-    websocket::stream<tcp::socket> ws{ioc};
+    websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws{ioc, ctx};
+    tcp::resolver resolver(ioc);
+
+    if (!SSL_set_tlsext_host_name(ws.next_layer().native_handle(),
+                                  "ws-feed.prime.coinbase.com")) {
+      boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
+                                   boost::asio::error::get_ssl_category()};
+      throw boost::system::system_error{ec};
+    }
 
     // Look up the domain name
     auto const results = resolver.resolve(host, port);
 
     // Make the connection on the IP address we get from a lookup
-    auto ep = net::connect(ws.next_layer(), results);
+    auto ep = beast::get_lowest_layer(ws).connect(results);
+
+    ws.next_layer().handshake(ssl::stream_base::client);
 
     // Update the host_ string. This will provide the value of the
     // Host HTTP header during the WebSocket handshake.
@@ -100,13 +112,7 @@ int main(int argc, char** argv) {
     beast::flat_buffer buffer;
 
     // Read a message into our buffer
-    int actual_msgs = 0;
-
-    for (;;) {
-      // don't count subscriptions and snapshot in the 10000
-      if (actual_msgs == 10000) {
-        break;
-      }
+    for (int i = 0; i != 10000; ++i) {
       ws.read(buffer);
 
       uint64_t exos_time =
@@ -143,15 +149,11 @@ int main(int argc, char** argv) {
           msgpack::sbuffer sbuf;
           msgpack::pack(sbuf, arr);
 
-          if (verbose) {
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
         }
       } else {
-        ++actual_msgs;
         std::string ts = j["time"];
         uint64_t vendor_time = EpochConverter(ts);
         int64_t vendor_offset = vendor_time - exos_time;
@@ -163,12 +165,9 @@ int main(int argc, char** argv) {
           msgpack::sbuffer sbuf;
           msgpack::pack(sbuf, arr);
 
-          if (verbose) {
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
         }
 
         if (type == "l2update") {
@@ -180,12 +179,9 @@ int main(int argc, char** argv) {
           msgpack::sbuffer sbuf;
           msgpack::pack(sbuf, arr);
 
-          if (verbose) {
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
         }
 
         else if (type == "match") {
@@ -197,12 +193,9 @@ int main(int argc, char** argv) {
           msgpack::sbuffer sbuf;
           msgpack::pack(sbuf, arr);
 
-          if (verbose) {
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
         }
       }
 
@@ -210,18 +203,22 @@ int main(int argc, char** argv) {
       buffer.consume(buffer.size());
     }
 
-    // // timing data
     // auto stop = std::chrono::high_resolution_clock::now();
     // std::cout << "closing! after: "
     //           << std::to_string(
-    //                  std::chrono::duration_cast<std::chrono::nanoseconds>(stop
+    // std::chrono::duration_cast<std::chrono::nanoseconds>(stop
     //                  -
-    //                                                                       start)
+    // start)
     //                      .count())
     //           << std::endl;
 
     // Close the WebSocket connection
     ws.close(websocket::close_code::normal);
+
+    // If we get here then the connection is closed gracefully
+
+    // The make_printable() function helps print a ConstBufferSequence
+    std::cout << beast::make_printable(buffer.data()) << std::endl;
   } catch (std::exception const& e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return EXIT_FAILURE;
