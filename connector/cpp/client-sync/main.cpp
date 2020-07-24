@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "helpers.hpp"
 #include "nlohmann/json.hpp"
@@ -58,7 +59,14 @@ int main(int argc, char** argv) {
     auto const text =
         "{\"type\": \"subscribe\", \"product_ids\": [\"BTC-USD\"], "
         "\"channels\": [\"level2\", \"matches\"]}";
-    // auto start = std::chrono::high_resolution_clock::now();
+
+    // timing data
+    auto start = std::chrono::high_resolution_clock::now();
+    uint64_t total_duration = 0;
+    uint64_t init_req = 0;
+    std::vector<uint64_t> message_duration;
+    std::vector<uint64_t> buff_reads;
+
     uint64_t seconds_to_epoch = 0;
     uint64_t sec_to_ns = 1000000000;
     int price_digits = 2;
@@ -93,28 +101,56 @@ int main(int argc, char** argv) {
     // Perform the websocket handshake
     ws.handshake(host, "/");
 
-    // Send the message
-    ws.write(net::buffer(std::string(text)));
-
     // This buffer will hold the incoming message
     beast::flat_buffer buffer;
 
     // Read a message into our buffer
     int actual_msgs = 0;
 
+    // Send the message
+    auto request = std::chrono::high_resolution_clock::now();
+    ws.write(net::buffer(std::string(text)));
+    auto recv = std::chrono::high_resolution_clock::now();
+    init_req =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(recv - request)
+            .count();
+
     for (;;) {
       // don't count subscriptions and snapshot in the 10000
       if (actual_msgs == 10000) {
         break;
       }
+      auto buff_read_tic = std::chrono::high_resolution_clock::now();
       ws.read(buffer);
+      buff_reads.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               now - buff_read_tic)
+                               .count());
 
-      uint64_t exos_time =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(
-              std::chrono::high_resolution_clock::now().time_since_epoch())
-              .count();
+      // first message is a possible Time message used to synchronize
+      auto now = std::chrono::high_resolution_clock::now();
+      uint64_t exos_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               now.time_since_epoch())
+                               .count();
+
       uint64_t elapsedEpoch = exos_time / sec_to_ns;
       int64_t t_ns = exos_time % sec_to_ns;
+      // std::cout << "exos time etc:\n"
+      //           << std::to_string(exos_time) << " "
+      //           << std::to_string(elapsedEpoch) << " " <<
+      //           std::to_string(t_ns)
+      //           << std::endl;
+      if (elapsedEpoch > seconds_to_epoch) {
+        seconds_to_epoch = elapsedEpoch;
+        Time ore_msg(0, seconds_to_epoch);
+        msgpack::sbuffer sbuf;
+        msgpack::pack(sbuf, ore_msg);
+
+        if (verbose) {
+          msgpack::object_handle oh = msgpack::unpack(sbuf.data(), sbuf.size());
+          msgpack::object deserialized = oh.get();
+          std::cout << deserialized << std::endl;
+        }
+      }
 
       json j = json::parse(beast::buffers_to_string(buffer.data()));
       std::string type = j["type"];
@@ -127,21 +163,17 @@ int main(int argc, char** argv) {
         // an l2 message for every bid/ask
         auto bids = j["bids"];
         auto asks = j["asks"];
-        int bid_switch = bids.size();
-        bids.insert(bids.end(), asks.begin(), asks.end());
+        // int bid_switch = bids.size();
+        // bids.insert(bids.end(), asks.begin(), asks.end());
 
         for (auto bids_iter = bids.begin(); bids_iter != bids.end();
              ++bids_iter) {
           int price_field = str_to_intfield((*bids_iter)[0], price_digits);
           int qty_field = str_to_intfield((*bids_iter)[1], qty_digits);
 
-          auto idx = std::distance(bids.begin(), bids_iter);
-
-          LevelSet ore_msg(1, t_ns, 0, 0, 0, 0, price_field, qty_field,
-                           idx < bid_switch ? "buy" : "sell");
-          std::array<LevelSet, 1> arr = {ore_msg};
+          LevelSet ore_msg(14, t_ns, 0, 0, 0, 0, price_field, qty_field, true);
           msgpack::sbuffer sbuf;
-          msgpack::pack(sbuf, arr);
+          msgpack::pack(sbuf, ore_msg);
 
           if (verbose) {
             msgpack::object_handle oh =
@@ -150,35 +182,40 @@ int main(int argc, char** argv) {
             std::cout << deserialized << std::endl;
           }
         }
+
+        for (auto asks_iter = asks.begin(); asks_iter != asks.end();
+             ++asks_iter) {
+          int price_field = str_to_intfield((*asks_iter)[0], price_digits);
+          int qty_field = str_to_intfield((*asks_iter)[1], qty_digits);
+
+          LevelSet ore_msg(14, t_ns, 0, 0, 0, 0, price_field, qty_field, false);
+          msgpack::sbuffer sbuf;
+          msgpack::pack(sbuf, ore_msg);
+
+          if (verbose) {
+            msgpack::object_handle oh =
+                msgpack::unpack(sbuf.data(), sbuf.size());
+            msgpack::object deserialized = oh.get();
+            std::cout << deserialized << std::endl;
+          }
+        }
+
       } else {
+        // timing information used by both l2 and match
         ++actual_msgs;
         std::string ts = j["time"];
         uint64_t vendor_time = EpochConverter(ts);
         int64_t vendor_offset = vendor_time - exos_time;
 
-        if (elapsedEpoch > seconds_to_epoch) {
-          seconds_to_epoch = elapsedEpoch;
-          Time ore_msg(0, seconds_to_epoch);
-          std::array<Time, 1> arr = {ore_msg};
-          msgpack::sbuffer sbuf;
-          msgpack::pack(sbuf, arr);
-
-          if (verbose) {
-            msgpack::object_handle oh =
-                msgpack::unpack(sbuf.data(), sbuf.size());
-            msgpack::object deserialized = oh.get();
-            std::cout << deserialized << std::endl;
-          }
-        }
-
         if (type == "l2update") {
+          // std::cout << "prices " << j["changes"][0][1] << " "
+          //           << j["changes"][0][2] << std::endl;
           int price_field = str_to_intfield(j["changes"][0][1], price_digits);
           int qty_field = str_to_intfield(j["changes"][0][2], qty_digits);
           LevelSet ore_msg(14, t_ns, vendor_offset, 0, 0, 0, price_field,
                            qty_field, j["changes"][0][0] == "buy");
-          std::array<LevelSet, 1> arr = {ore_msg};
           msgpack::sbuffer sbuf;
-          msgpack::pack(sbuf, arr);
+          msgpack::pack(sbuf, ore_msg);
 
           if (verbose) {
             msgpack::object_handle oh =
@@ -189,13 +226,14 @@ int main(int argc, char** argv) {
         }
 
         else if (type == "match") {
+          // std::cout << "prices " << j["changes"][0][1] << " "
+          //           << j["changes"][0][2] << std::endl;
           auto price_field = str_to_intfield(j["price"], price_digits);
           auto qty_field = str_to_intfield(j["size"], qty_digits);
           Match ore_msg(11, t_ns, vendor_offset, 0, 0, 0, price_field,
                         qty_field, j["side"] == "buy" ? "b" : "s");
-          std::array<Match, 1> arr = {ore_msg};
           msgpack::sbuffer sbuf;
-          msgpack::pack(sbuf, arr);
+          msgpack::pack(sbuf, ore_msg);
 
           if (verbose) {
             msgpack::object_handle oh =
@@ -208,17 +246,28 @@ int main(int argc, char** argv) {
 
       // drain buffer
       buffer.consume(buffer.size());
+      auto exos_end = std::chrono::high_resolution_clock::now();
+      message_duration.push_back(
+          std::chrono::duration_cast<std::chrono::nanoseconds>(exos_end - now)
+              .count());
     }
 
     // // timing data
-    // auto stop = std::chrono::high_resolution_clock::now();
-    // std::cout << "closing! after: "
-    //           << std::to_string(
-    //                  std::chrono::duration_cast<std::chrono::nanoseconds>(stop
-    //                  -
-    //                                                                       start)
-    //                      .count())
-    //           << std::endl;
+    auto stop = std::chrono::high_resolution_clock::now();
+    total_duration =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
+            .count();
+    std::cout << "closing! after: " << std::to_string(total_duration)
+              << std::endl;
+    std::cout << "init req: " << std::to_string(init_req) << std::endl;
+    std::cout << "message durations: " << std::endl;
+    for (auto i = message_duration.begin(); i != message_duration.end(); ++i) {
+      std::cout << std::to_string(*i) << std::endl;
+    }
+    std::cout << "buff reads: " << std::endl;
+    for (auto i = buff_Reads.begin(); i != buff_reads.end(); ++i) {
+      std::cout << std::to_string(*i) << std::endl;
+    }
 
     // Close the WebSocket connection
     ws.close(websocket::close_code::normal);

@@ -25,7 +25,7 @@ if(MSVC)
   add_compile_options(/MP)
   string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wpedantic")
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -44,6 +44,12 @@ message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
 
 find_package(ZLIB)
 
+# # didn't work
+# set(SIMDJSON_JUST_LIBRARY ON CACHE STRING "Build just the library, nothing else." FORCE)
+# add_subdirectory(simdjson EXCLUDE_FROM_ALL)
+
+include_directories(/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/coinbase/rapidjson/include)
+
 # needed the boost_root hint
 set(BOOST_ROOT /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/include/boost_1_73_0)
 find_package(Boost REQUIRED COMPONENTS system)
@@ -58,8 +64,9 @@ source_group(TREE ${Boost_INCLUDE_DIRS}/boost/beast PREFIX beast FILES ${BEAST_F
 
 # # we use a third party (non boost) json library; it's a single header file we stick in the project tree itself...
 # # similar to root_certificates.hpp
+# nlohmann/json.hpp
 file(GLOB APP_FILES
-  nlohmann/json.hpp
+  
   helpers.hpp
   root_certificates.hpp
   ore.hpp
@@ -72,7 +79,7 @@ add_executable(websocket-msg-client-sync ${APP_FILES} ${BEAST_FILES})
 
 if(NOT WIN32)
   find_package(Threads)
-  target_link_libraries(websocket-msg-client-sync PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB dl)
+  target_link_libraries(websocket-msg-client-sync PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ZLIB::ZLIB dl )
   target_include_directories(websocket-msg-client-sync PRIVATE msgpack-c/include)
 endif()
 

@@ -17,6 +17,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -137,6 +138,17 @@ void do_session(tcp::socket& socket) {
           }
           alternating = !alternating;
         }
+
+        // // read + write from test.set
+        // std::ifstream test;
+        // test.open(
+        //     "/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/"
+        //     "connector/cpp/server/test.set");
+        // std::string line;
+        // while (std::getline(test, line)) {
+        //   ws.write(net::buffer(line));
+        // }
+        // test.close();
 
         // // Echo the message back
         // ws.text(ws.got_text());

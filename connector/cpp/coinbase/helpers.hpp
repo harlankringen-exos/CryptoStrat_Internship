@@ -75,16 +75,27 @@ long long EpochConverter(std::string const& str) {
 int str_to_intfield(std::string s, int ndigits) {
   // assert ndigits >= 0
   auto x = s.find(".");
-  if (x != std::string::npos) {
-    return stoi(s) * (pow(10, ndigits));
+  if (x == std::string::npos) {
+    return stof(s) * (pow(10, ndigits));
   } else {
     int span = s.size() - 1;
     while (s[span] == 0) {
       --span;
     }
-    s.erase(span, s.size());
+    try {
+      s.erase(span, s.size());
+    } catch (...) {
+      std::cout << "error: (" << s << ") " << std::to_string(span) << std::endl;
+    }
     auto n = s.size();
     // assert n - x - 1 <= ndigits, f'{n - x},{ndigits}'
-    return stoi(s.erase(x, 1)) * pow(10, (ndigits - n + x + 1));
+    try {
+      auto ans = stof(s.erase(x, 1)) * pow(10, (ndigits - n + x + 1));
+      return ans;
+    } catch (...) {
+      std::cout << "second error: (" << s << ") " << std::to_string(span)
+                << std::endl;
+    }
+    return -1;
   }
 }

@@ -1,3 +1,6 @@
 [submodule "connector/cpp/connector/cpp/client-async/msgpack-c"]
 	path = connector/cpp/connector/cpp/client-async/msgpack-c
 	url = https://github.com/msgpack/msgpack-c.git
+[submodule "connector/cpp/coinbase/connector/cpp/coinbase/rapidjson"]
+	path = connector/cpp/coinbase/connector/cpp/coinbase/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
