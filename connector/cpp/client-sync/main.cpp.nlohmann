@@ -29,13 +29,11 @@
 #include <vector>
 
 #include "helpers.hpp"
-//#include "nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 #include "ore.hpp"
 
-// // for convenience
-// using json = nlohmann::json;
-#include "rapidjson/document.h"
-#include "rapidjson/pointer.h"
+// for convenience
+using json = nlohmann::json;
 
 namespace beast = boost::beast;          // from <boost/beast.hpp>
 namespace http = beast::http;            // from <boost/beast/http.hpp>
@@ -190,23 +188,24 @@ int main(int argc, char** argv) {
         }
       }
 
-      rapidjson::Document j;
-      j.Parse(beast::buffers_to_string(buffer.data()).c_str());
-      std::string type = j["type"].GetString();
+      json j = json::parse(beast::buffers_to_string(buffer.data()));
+      std::string type = j["type"];
 
       if (type == "subscriptions") {
         buffer.consume(buffer.size());
         continue;
       } else if (type == "snapshot") {
-        auto bids = j["bids"].GetArray();
-        auto asks = j["asks"].GetArray();
+        // vendor_offset is 0
+        // an l2 message for every bid/ask
+        auto bids = j["bids"];
+        auto asks = j["asks"];
+        // int bid_switch = bids.size();
+        // bids.insert(bids.end(), asks.begin(), asks.end());
 
         for (auto bids_iter = bids.begin(); bids_iter != bids.end();
              ++bids_iter) {
-          auto prc = bids_iter->GetArray()[0].GetString();
-          auto sz = bids_iter->GetArray()[1].GetString();
-          int price_field = str_to_intfield(prc, price_digits);
-          int qty_field = str_to_intfield(sz, qty_digits);
+          int price_field = str_to_intfield((*bids_iter)[0], price_digits);
+          int qty_field = str_to_intfield((*bids_iter)[1], qty_digits);
 
           LevelSet ore_msg(14, t_ns, 0, 0, 0, 0, price_field, qty_field, true);
           msgpack::sbuffer sbuf;
@@ -222,10 +221,8 @@ int main(int argc, char** argv) {
 
         for (auto asks_iter = asks.begin(); asks_iter != asks.end();
              ++asks_iter) {
-          auto prc = asks_iter->GetArray()[0].GetString();
-          auto sz = asks_iter->GetArray()[1].GetString();
-          int price_field = str_to_intfield(prc, price_digits);
-          int qty_field = str_to_intfield(sz, qty_digits);
+          int price_field = str_to_intfield((*asks_iter)[0], price_digits);
+          int qty_field = str_to_intfield((*asks_iter)[1], qty_digits);
 
           LevelSet ore_msg(14, t_ns, 0, 0, 0, 0, price_field, qty_field, false);
           msgpack::sbuffer sbuf;
@@ -242,19 +239,15 @@ int main(int argc, char** argv) {
       } else {
         // timing information used by both l2 and match
         ++actual_msgs;
-        std::string ts = j["time"].GetString();
+        std::string ts = j["time"];
         uint64_t vendor_time = EpochConverter(ts);
         int64_t vendor_offset = vendor_time - exos_time;
 
         if (type == "l2update") {
-          std::string side =
-              rapidjson::Pointer("/changes/0/0").Get(j)->GetString();
-          std::string prc =
-              rapidjson::Pointer("/changes/0/1").Get(j)->GetString();
-          std::string sz =
-              rapidjson::Pointer("/changes/0/2").Get(j)->GetString();
-          int price_field = str_to_intfield(prc, price_digits);
-          int qty_field = str_to_intfield(sz, qty_digits);
+          // std::cout << "prices " << j["changes"][0][1] << " "
+          //           << j["changes"][0][2] << std::endl;
+          int price_field = str_to_intfield(j["changes"][0][1], price_digits);
+          int qty_field = str_to_intfield(j["changes"][0][2], qty_digits);
           LevelSet ore_msg(14, t_ns, vendor_offset, 0, 0, 0, price_field,
                            qty_field, j["changes"][0][0] == "buy");
           msgpack::sbuffer sbuf;
@@ -269,11 +262,10 @@ int main(int argc, char** argv) {
         }
 
         else if (type == "match") {
-          std::string side = j["side"].GetString();
-          std::string prc = j["price"].GetString();
-          std::string sz = j["size"].GetString();
-          auto price_field = str_to_intfield(prc, price_digits);
-          auto qty_field = str_to_intfield(sz, qty_digits);
+          // std::cout << "prices " << j["changes"][0][1] << " "
+          //           << j["changes"][0][2] << std::endl;
+          auto price_field = str_to_intfield(j["price"], price_digits);
+          auto qty_field = str_to_intfield(j["size"], qty_digits);
           Match ore_msg(11, t_ns, vendor_offset, 0, 0, 0, price_field,
                         qty_field, j["side"] == "buy" ? "b" : "s");
           msgpack::sbuffer sbuf;

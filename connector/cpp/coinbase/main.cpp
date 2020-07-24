@@ -40,8 +40,6 @@
 // using namespace simdjson;  // optional
 #include "rapidjson/document.h"
 #include "rapidjson/pointer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 namespace beast = boost::beast;          // from <boost/beast.hpp>
 namespace http = beast::http;            // from <boost/beast/http.hpp>
@@ -193,7 +191,6 @@ int main(int argc, char** argv) {
 
       rapidjson::Document j;
       j.Parse(beast::buffers_to_string(buffer.data()).c_str());
-
       std::string type = j["type"].GetString();
 
       if (type == "subscriptions") {

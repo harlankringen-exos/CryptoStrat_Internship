@@ -44,6 +44,8 @@ message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
 
 find_package(ZLIB)
 
+include_directories(/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/coinbase/rapidjson/include)
+
 # needed the boost_root hint
 set(BOOST_ROOT /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/include/boost_1_73_0)
 find_package(Boost REQUIRED COMPONENTS system)
