@@ -22,14 +22,9 @@
 #include <string>
 
 #include "helpers.hpp"
-//#include "nlohmann/json.hpp"
 #include "ore.hpp"
 #include "root_certificates.hpp"
-//#include "simdjson.h"
 
-// // for convenience
-// using json = nlohmann::json;
-// using namespace simdjson;  // optional
 #include "rapidjson/document.h"
 #include "rapidjson/pointer.h"
 
