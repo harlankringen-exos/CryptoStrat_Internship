@@ -1,0 +1,12 @@
+{
+    "type":"subscribe",
+    "product_ids":["BTC-USD"],
+    "channels":[
+	{"name":"heartbeat",
+	 "product_ids": ["BTC-USD"]
+	},
+	{"name":"full",
+	 "product_ids": ["BTC-USD"]
+	}]
+}
+    

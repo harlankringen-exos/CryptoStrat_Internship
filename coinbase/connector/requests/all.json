@@ -1,0 +1,18 @@
+{
+    "type":"subscribe",
+    "product_ids":["BTC-USD"],
+    "channels":[
+	{"name":"heartbeat",
+	 "product_ids": ["BTC-USD"]
+	},
+	{"name":"ticker",
+	 "product_ids": ["BTC-USD"]
+	},
+	{"name":"matches",
+	 "product_ids": ["BTC-USD"]
+	},
+	{"name":"level2",
+	 "product_ids": ["BTC-USD"]
+	}]
+}
+    
