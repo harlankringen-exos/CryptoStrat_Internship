@@ -1,11 +1,3 @@
-//
-// Copyright (c) 2016-2019 Vinnie Falco (vinnie dot falco at gmail dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/boostorg/beast
-//
 
 //------------------------------------------------------------------------------
 //
@@ -30,14 +22,9 @@
 #include <string>
 
 #include "helpers.hpp"
-//#include "nlohmann/json.hpp"
 #include "ore.hpp"
 #include "root_certificates.hpp"
-//#include "simdjson.h"
 
-// // for convenience
-// using json = nlohmann::json;
-// using namespace simdjson;  // optional
 #include "rapidjson/document.h"
 #include "rapidjson/pointer.h"
 
