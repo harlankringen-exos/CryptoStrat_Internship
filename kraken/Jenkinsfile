@@ -1,0 +1,5 @@
+buildPipeline {
+    repo = "coinbase_ore_generator"
+    docker_image_name="coinbase_ore_generator"
+    deploy_image="false"
+}

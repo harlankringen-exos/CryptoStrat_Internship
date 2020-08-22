@@ -1,0 +1,21 @@
+
+
+* connector 0
+  - records until line 9622, then cuts out, then reconnects to get the snapshot in snapshot_1.txt
+  - records for 10 more lines until it drops out again
+  - reconnects to get snapshot_2.txt's snapshot
+  - records for 10 more lines and dies (early by a mile)
+
+* connector 1
+  - records until line 16414, then cuts out, reconnects to get snapshot from snapshot_2.txt
+  - records until 1596667611.577525
+
+* connector 2
+  - records until 23580, disconnects, then reconnects to get the snapshot from snapshot_3.txt
+  - records until 1596667611.577525
+
+* flow
+  - start at connector 0 and read until disconnect
+  - switch to connector 1 until disconnect
+  - switch to connector 2 until disconnect
+  - switch to connector 1 until the end

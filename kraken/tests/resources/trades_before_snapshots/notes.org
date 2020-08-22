@@ -1,0 +1,4 @@
+
+* trade immediately before snapshot update
+  the idea is that the update and the following line got swapped
+  we do this at the first snapshot message in connector 1

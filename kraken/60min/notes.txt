@@ -1,6 +1,0 @@
-
-diff snapshot_a0.txt snapshot_b0.txt 
-diff snapshot_a2.txt snapshot_b2.txt 
-diff snapshot_c2.txt snapshot_b2.txt
-diff snapshot_a5.txt snapshot_b5.txt 
-diff snapshot_a5.txt snapshot_c5.txt 

@@ -8,6 +8,7 @@ This directory tracks the attempts to translate the code in `connector/socks/*` 
 1. boost (beast and asio)
 2. nlohmann (json)
 3. msgpack
+4. rapidjson
 
 ## How to build
 

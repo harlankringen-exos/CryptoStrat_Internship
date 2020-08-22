@@ -1,0 +1,5 @@
+
+* connector 1
+  - same as interrupted/ but doesn't get the first snapshot; this is supposed to
+    represent packets missing because they were dropped, not because we
+    disconnected and resubscribed
