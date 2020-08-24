@@ -76,3 +76,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# specific folders
+coinbase/connector/cpp/include/boost_1_73_0
