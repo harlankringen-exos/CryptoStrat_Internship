@@ -77,5 +77,10 @@ ENV/
 env.bak/
 venv.bak/
 
-# specific folders
+# dependency
 coinbase/connector/cpp/include/boost_1_73_0
+
+# large datasets
+coinbase/analysis/generator/data_dumps
+
+kraken/data_capture
