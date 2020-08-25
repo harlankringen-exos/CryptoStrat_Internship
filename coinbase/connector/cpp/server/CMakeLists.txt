@@ -31,19 +31,18 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER build)
 
-# this ultimately depended on an ubuntu install
-# possibly don't need some of this anymore...
-set(OPENSSL_USE_STATIC_LIBS TRUE)
-set(OPENSSL_ROOT_DIR /usr/local/ssl/lib)
-set(OPENSSL_INCLUDE_DIR /usr/local/ssl/include/openssl)
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIRS})
-link_directories(${OPENSSL_LIBRARY_DIRS})
-message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
-
+# # this ultimately depended on an ubuntu install
+# # possibly don't need some of this anymore...
+# set(OPENSSL_USE_STATIC_LIBS TRUE)
+# set(OPENSSL_ROOT_DIR /usr/local/ssl/lib)
+# set(OPENSSL_INCLUDE_DIR /usr/local/ssl/include/openssl)
+# find_package(OpenSSL REQUIRED)
+# include_directories(${OPENSSL_INCLUDE_DIRS})
+# link_directories(${OPENSSL_LIBRARY_DIRS})
+# message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
 
 # needed the boost_root hint
-set(BOOST_ROOT /home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/connector/cpp/include/boost_1_73_0)
+set(BOOST_ROOT ../include/boost_1_73_0/)
 find_package(Boost REQUIRED COMPONENTS system)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
@@ -54,11 +53,8 @@ file(GLOB_RECURSE BEAST_FILES
 
 source_group(TREE ${Boost_INCLUDE_DIRS}/boost/beast PREFIX beast FILES ${BEAST_FILES})
 
-# # we use a third party (non boost) json library; it's a single header file we stick in the project tree itself...
-# # similar to root_certificates.hpp
 file(GLOB APP_FILES
   beast.hpp
-  nlohmann/json.hpp
   ore.hpp
   main.cpp
   net.hpp)
@@ -69,8 +65,7 @@ add_executable(websocket-msg-server ${APP_FILES} ${BEAST_FILES})
 
 if(NOT WIN32)
   find_package(Threads)
-  target_link_libraries(websocket-msg-server PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY} OpenSSL::SSL OpenSSL::Crypto)
-  target_include_directories(websocket-msg-server PRIVATE msgpack-c/include)
+  target_link_libraries(websocket-msg-server PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY})# OpenSSL::SSL OpenSSL::Crypto)
 endif()
 
 set_target_properties(websocket-msg-server PROPERTIES

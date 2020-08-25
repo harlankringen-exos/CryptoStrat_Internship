@@ -77,8 +77,11 @@ ENV/
 env.bak/
 venv.bak/
 
-# dependency
-coinbase/connector/cpp/include/boost_1_73_0/
+# dependency and c++ stuff
+coinbase/connector/cpp/include
+coinbase/connector/cpp/server/bin
+coinbase/connector/cpp/client-sync/bin
+coinbase/connector/cpp/client-async/bin
 
 # large datasets
 coinbase/analysis/generator/data_dumps/
