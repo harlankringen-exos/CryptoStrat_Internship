@@ -129,8 +129,7 @@ void do_session(tcp::socket& socket) {
         // // read + write from test.set
         // std::ifstream test;
         // test.open(
-        //     "/home/harlan/ucsb/projects/exos_internship/CryptoStrat_Internship/"
-        //     "connector/cpp/server/test.set");
+        //     "test.set");
         // std::string line;
         // while (std::getline(test, line)) {
         //   ws.write(net::buffer(line));
