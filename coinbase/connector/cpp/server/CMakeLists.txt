@@ -31,16 +31,6 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER build)
 
-# # this ultimately depended on an ubuntu install
-# # possibly don't need some of this anymore...
-# set(OPENSSL_USE_STATIC_LIBS TRUE)
-# set(OPENSSL_ROOT_DIR /usr/local/ssl/lib)
-# set(OPENSSL_INCLUDE_DIR /usr/local/ssl/include/openssl)
-# find_package(OpenSSL REQUIRED)
-# include_directories(${OPENSSL_INCLUDE_DIRS})
-# link_directories(${OPENSSL_LIBRARY_DIRS})
-# message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
-
 # needed the boost_root hint
 set(BOOST_ROOT ../include/boost_1_73_0/)
 find_package(Boost REQUIRED COMPONENTS system)
@@ -65,7 +55,7 @@ add_executable(websocket-msg-server ${APP_FILES} ${BEAST_FILES})
 
 if(NOT WIN32)
   find_package(Threads)
-  target_link_libraries(websocket-msg-server PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY})# OpenSSL::SSL OpenSSL::Crypto)
+  target_link_libraries(websocket-msg-server PRIVATE Threads::Threads ${Boost_SYSTEM_LIBRARY})
 endif()
 
 set_target_properties(websocket-msg-server PROPERTIES

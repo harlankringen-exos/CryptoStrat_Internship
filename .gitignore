@@ -81,7 +81,7 @@ venv.bak/
 coinbase/connector/cpp/include
 coinbase/connector/cpp/server/bin
 coinbase/connector/cpp/client-sync/bin
-coinbase/connector/cpp/client-async/bin
+coinbase/connector/cpp/coinbase-sync/bin
 
 # large datasets
 coinbase/analysis/generator/data_dumps/

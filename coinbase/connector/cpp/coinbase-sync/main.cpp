@@ -22,14 +22,9 @@
 #include <tuple>
 
 #include "helpers.hpp"
-//#include "nlohmann/json.hpp"
 #include "ore.hpp"
 #include "root_certificates.hpp"
-//#include "simdjson.h"
 
-// // for convenience
-// using json = nlohmann::json;
-// using namespace simdjson;  // optional
 #include "rapidjson/document.h"
 #include "rapidjson/pointer.h"
 
@@ -53,8 +48,7 @@ timing_data global_timing;
 void signalHandler(int signum) {
   std::cout << "terminate signal (" << signum << ") received.\n";
 
-  // If we get here then the connection is closed gracefully
-  // write to file
+  // connection closed gracefully and we write to file
   std::ofstream timing;
   timing.open("timing.csv");
   timing << "msg_type,processing_time_ns,buff_read_ns\n";
@@ -81,19 +75,19 @@ int main(int argc, char** argv) {
 
   try {
     // Check command line arguments.
-    if (argc != 4) {
-      std::cerr << "Usage: websocket-client-sync <host> <port> <text>\n"
+    if (argc != 2) {
+      std::cerr << "Usage: websocket-msg-client-sync <verbose>\n"
                 << "Example:\n"
-                << "    websocket-client-sync echo.websocket.org 80 \"Hello, "
-                   "world!\"\n";
+                << "    websocket-msg-client-sync true\n";
       return EXIT_FAILURE;
     }
-    std::string host = argv[1];
-    auto const port = argv[2];
+
+    std::string host = "ws-feed.prime.coinbase.com";
+    auto const port = "443";
     auto const verbose =
-        (std::string(argv[3]) == "true" || std::string(argv[3]) == "1") ? true
+        (std::string(argv[1]) == "true" || std::string(argv[3]) == "1") ? true
                                                                         : false;
-    auto const text =
+    auto const subscription =
         "{\"type\": \"subscribe\", \"product_ids\": [\"BTC-USD\"], "
         "\"channels\": [\"level2\", \"matches\"]}";
     uint64_t seconds_to_epoch = 0;
@@ -146,7 +140,7 @@ int main(int argc, char** argv) {
 
     // Send the message
     auto request = std::chrono::high_resolution_clock::now();
-    ws.write(net::buffer(std::string(text)));
+    ws.write(net::buffer(std::string(subscription)));
     auto recv = std::chrono::high_resolution_clock::now();
     global_timing.init_req =
         std::chrono::duration_cast<std::chrono::nanoseconds>(recv - request)
