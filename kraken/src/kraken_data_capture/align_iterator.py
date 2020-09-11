@@ -6,8 +6,6 @@ import math
 
 foldl = lambda func, acc, xs: functools.reduce(func, xs, acc)
 
-# for msg in KrakenStream([c1,c2,c3]).dedup():
-#    print(msg)
 class KrakenStream():
     def __init__(self, connectors=[]):
         # connectors is a list of iterators
@@ -76,7 +74,7 @@ class KrakenStream():
             line[youngest].insert(1, seq_no)
             self.deduplicated_stream.append(line[youngest])
 
-        # so I can chain this as a dot method onto initialization
+        # to chain this as a dot method onto initialization
         return self
 
     def __len__(self):
@@ -129,7 +127,7 @@ class KrakenStream():
             else:
                 return [math.inf] # an update message, so we give it a very large number we would never take for the min
 
-        # todo: still just taking the first
+        # still just taking the first
         elif msg[0] == 271:
             for i in payload:
                 ts.append(float(i[2]))
@@ -140,11 +138,6 @@ class KrakenStream():
         mins = list(map(lambda l: min(l), times))
         min_elt = min(mins)
         min_idx = []
-        # for idx,m in enumerate(mins):
-        #     if m == min_elt:
-        #         min_idx.append(idx)
-        # for m in min_idx:
-        #     if len(times[m])
         return mins.index(min(mins))
         
     def read_until_ts(self, fobj, ts):
@@ -156,7 +149,6 @@ class KrakenStream():
         else:
             return fobj
             
-
     def write_dedup(self, outf_name='connector_dedup.txt'):
         with open(outf_name, 'w') as out:
             for line in self.deduplicated_stream:
@@ -165,15 +157,18 @@ class KrakenStream():
     def write_snapshot(self, outf_name='snapshot_dedup.txt'):
         with open(outf_name, 'w') as out:
             for lin in self.deduplicated_stream:
-                out.write(str(lnie) + '\n')
+                out.write(str(line) + '\n')
         
 if __name__ == "__main__":
     import sys
     connector_files = [open(f) for f in sys.argv[1:]]
 
     k = KrakenStream(connector_files).dedup()
+
+    for msg in k:
+        print(msg)
+    
     print(len(k))
-    
 
-
-    
+    k.write_dedup("dedup.txt")
+    k.write_snapshot("snapshot.txt")
